@@ -10,6 +10,8 @@ int bufferstart= 44960; //start memory location of screen buffer
 int bufferend =46079; //end memory location of text screen
 int scrnstart=48000; //start memory location of text screen
 int scrnend =49119; //end memory location of text screen
+int shipmem =46600; //end memory location of ship characters
+const char blanks[4] = "    ";
 char *writePtr;  //declare pointers for screen and ship memory locations
 char *writePtr2;
 char *shipPtr;
@@ -17,14 +19,47 @@ char *shipPtr2;
 char *scrnshipPtr;
 char *scrnshipPtr2;
 char touch;
-void main()
+char ship[4]="ABCD";
+char ship1 [4]= "ABCD";
+char ship2 [4]= "EFGH";
+char redefchar[64]=
 {
+0,36,16,31,8,36,0,0,  
+15,0,0,63,31,0,0,0,   
+63,2,7,58,54,58,31,15, 
+63,0,48,40,38,51,63,62, 
+
+0,36,16,31,8,36,0,0,  
+0,0,0,63,31,0,0,0,   
+15,2,7,58,54,58,31,15, 
+32,0,48,40,38,51,63,62
+};
+
+
+
+void main()
+
+{
+memcpy((unsigned char*)shipmem,redefchar,64);
+//exit(0);
 cls();  //clearscreen
+memcpy(ship,ship1,4);
 startgame();
 }
 
 void scroll()
 {
+	int ret = strcmp(ship, ship1);
+	if (ret<0)
+	{
+		memcpy(ship,ship2,4);
+	}
+	else
+	{
+	 	memcpy(ship,ship1,4);
+	}
+	memcpy((unsigned char*)shipPtr,blanks,4);
+	memcpy((unsigned char*)shipPtr+1,ship,4);
 	writePtr= (char*)bufferstart +82	;
 	writePtr2=(char*)bufferstart+83;
 	for (loopcounter1=1;loopcounter1<26;loopcounter1++)
@@ -33,6 +68,7 @@ void scroll()
 		writePtr+=40;
 		writePtr2+=40;
 		}
+	plotship();
 }
 
 void nextmountain()
@@ -134,7 +170,7 @@ void startgame()
 	shipPtr2= (char*)(bufferstart+shipx+shipy*40-1) ; //set pointer for screen buffer to blank after scroll
 	scrnshipPtr= (char*)(scrnstart+shipx+shipy*40) ; //set pointer for screen buffer
 	scrnshipPtr2= (char*)(scrnstart+shipx+shipy*40-1) ; //set pointer for screen buffer to blank after scroll
-	*shipPtr=65;
+	plotship();
 	playgame();
 }
 
@@ -143,16 +179,19 @@ void playgame()
 	do  // main play loop
 	{
 		getkeys(); // check for key press
-		if(peek(bufferstart+shipx+1+shipy*40)!=32) //basic collision check
+		if(peek(bufferstart+shipx+4+shipy*40)!=32) //basic collision check
 		{
 		 	collision();
 		}
+		plotblanks();
 		scroll(); 
 		nextmountain(); //generate last column of terrain after scrolling
-		*shipPtr=65; 	//dont scroll the ship
-		*shipPtr2=32;
-		*scrnshipPtr=65; 	//dont scroll the ship
-		*scrnshipPtr2=32;
+		plotship();
+			
+		//*shipPtr=65; 	//dont scroll the ship
+		//*shipPtr2=32;
+		//*scrnshipPtr=65; 	//dont scroll the ship
+		//*scrnshipPtr2=32;
 		flipscrn(); // swap buffer to screen
 	}
 	while( a ==0 );
@@ -169,70 +208,50 @@ void getkeys()
 {
 	touch=key(); // keyboard check and basic screen limits for movement
 	
-	if ((touch=='L') && (shipx!=35) )
+	if ((touch=='L') && (shipx!=33) )
 	{
-		*shipPtr=32;
-		*shipPtr2=32;
-		*scrnshipPtr=32;
-		*scrnshipPtr2=32;
+		
+		plotblanks();
 		shipx++;
 		shipPtr++;
 		shipPtr2++;
 		scrnshipPtr++;
 		scrnshipPtr2++;
-		*shipPtr=65;
-		*shipPtr2=32;
-		*scrnshipPtr=65;
-		*scrnshipPtr2=32;
+		memcpy((unsigned char*)scrnshipPtr-1,blanks,4);
+		plotship();
 	}	
 		if ((touch=='K') && (shipx!=4)) 
 	{
-		*shipPtr=32;
-		*shipPtr2=32;
-		*scrnshipPtr=32;
-		*scrnshipPtr2=32;
+		plotblanks();
 		shipx--;
 		shipPtr--;
 		shipPtr2--;
 		scrnshipPtr--;
 		scrnshipPtr2--;
-		*shipPtr=65;
-		*shipPtr2=32;
-		*scrnshipPtr=65;
-		*scrnshipPtr2=32;
+		memcpy((unsigned char*)scrnshipPtr+1,blanks,4);
+		plotship();
 	}
 	if ((touch=='A') && (shipy!=2) )
 	{
-		*shipPtr=32;
-		*shipPtr2=32;
-		*scrnshipPtr=32;
-		*scrnshipPtr2=32;
+		plotblanks();
 		shipy--;
-		shipPtr=shipPtr-40;
-		shipPtr2=shipPtr-1;
-		scrnshipPtr=scrnshipPtr-40;
-		scrnshipPtr2=scrnshipPtr-1;
-		*shipPtr=65;
-		*shipPtr2=32;
-		*scrnshipPtr=65;
-		*scrnshipPtr2=32;
+		shipPtr-=40;
+		shipPtr2-=40;
+		scrnshipPtr-=40;
+		scrnshipPtr2-=40;
+		memcpy((unsigned char*)scrnshipPtr+40,blanks,4);
+		plotship();
 	}
 	if ((touch=='Z') && (shipy!=24) )
 	{
-*shipPtr=32;
-*shipPtr=32;
-		*shipPtr2=32;
-		*scrnshipPtr=32;
-		*scrnshipPtr2=32;
+		plotblanks();
 		shipy++;
-		shipPtr=shipPtr+40;
-		shipPtr2=shipPtr-1;
-		scrnshipPtr=scrnshipPtr+40;
-		scrnshipPtr2=scrnshipPtr-1;
-		*shipPtr=65;
-		*shipPtr2=32;
-		*scrnshipPtr=65;
-		*scrnshipPtr2=32;
+		shipPtr+=40;
+		shipPtr2+=40;
+		scrnshipPtr+=40;
+		scrnshipPtr2+=40;
+		memcpy((unsigned char*)scrnshipPtr-40,blanks,4);
+		plotship();
 	}
 	
 }
@@ -251,6 +270,18 @@ void movebullet()
 	// nothing as yet
 
 }
+void plotship()
+{
+	memcpy((unsigned char*)scrnshipPtr,ship,4);
+	memcpy((unsigned char*)shipPtr,ship,4);
+	
+}
+void plotblanks()
+{
+	memcpy((unsigned char*)shipPtr,blanks,4);
+	//memcpy((unsigned char*)scrnshipPtr,blanks,4);
+}
+
 
 void gameover()
 {
