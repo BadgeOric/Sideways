@@ -3,6 +3,6 @@
 ::
 :: Set the build paremeters
 ::
-SET OSDKADDR=$5000
+SET OSDKADDR=$600
 SET OSDKNAME=SIDEWA
 SET OSDKFILE=MAIN
